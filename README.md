@@ -1,8 +1,6 @@
 # Crop Disease Detection
 
-## About
-This project is a smart crop disease detection system built with Flask and TensorFlow. It helps farmers and users identify plant diseases by uploading a leaf image, get a prediction from a trained Keras model, and also view local weather information for better crop monitoring.
-
+ 
 ## Overview
 This project is a Flask-based crop disease detection web application that allows users to upload leaf images and get disease predictions using a trained TensorFlow/Keras model. It also includes a weather forecast section that uses the user's location or a manually entered city name to show local weather conditions.
 
