@@ -26,7 +26,14 @@
                <!-- =========== WEATHER CARD ============ -->
 <div class="weather-card bg-light p-3 rounded mb-4" style="width: 350px; margin:auto;">
     <h4>🌦️ Weather Forecast</h4>
-    <p id="weather-status">Getting your location...</p>
+    <p id="weather-status">Use your location or enter a city.</p>
+    <div class="d-grid gap-2 mb-2">
+        <button id="use-location-btn" type="button" class="btn btn-outline-success btn-sm">Use my location</button>
+    </div>
+    <div class="input-group input-group-sm mb-2">
+        <input id="city-input" type="text" class="form-control" placeholder="Enter city name" aria-label="City name">
+        <button id="city-btn" class="btn btn-outline-primary" type="button">Go</button>
+    </div>
     <p id="weather-temp"></p>
     <p id="weather-rain"></p>
 </div>
@@ -70,46 +77,73 @@
 
 <!-- ========== WEATHER SCRIPT ========== -->
 <script>
-    // Step 1: Get GPS location
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(success, error);
-    } else {
-        document.getElementById("weather-status").innerHTML = "GPS not supported";
+    const statusEl = document.getElementById("weather-status");
+    const tempEl = document.getElementById("weather-temp");
+    const rainEl = document.getElementById("weather-rain");
+
+    function showWeather(data) {
+        if (data.error) {
+            statusEl.innerHTML = "Error: " + data.message;
+            tempEl.innerHTML = "";
+            rainEl.innerHTML = "";
+            return;
+        }
+
+        statusEl.innerHTML = "Location: " + data.location;
+        tempEl.innerHTML = "Temperature: " + data.temp + "°C";
+        rainEl.innerHTML = "Condition: " + data.description;
     }
 
-    function success(position) {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        document.getElementById("weather-status").innerHTML = "Fetching weather...";
-
-        // Step 2: Send GPS to backend
-        fetch(`/weather?lat=${lat}&lon=${lon}`)
+    function fetchWeather(url) {
+        statusEl.innerHTML = "Fetching weather...";
+        fetch(url)
             .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    document.getElementById("weather-status").innerHTML = "Error: " + data.message;
-                    document.getElementById("weather-temp").innerHTML = "";
-                    document.getElementById("weather-rain").innerHTML = "";
-                    return;
-                }
-
-                document.getElementById("weather-status").innerHTML = "Location: " + data.location;
-                document.getElementById("weather-temp").innerHTML = "Temperature: " + data.temp + "°C";
-                document.getElementById("weather-rain").innerHTML = "Condition: " + data.description;
-            })
-            .catch(err => {
-                document.getElementById("weather-status").innerHTML = "Failed to fetch weather";
-                document.getElementById("weather-temp").innerHTML = "";
-                document.getElementById("weather-rain").innerHTML = "";
+            .then(showWeather)
+            .catch(() => {
+                statusEl.innerHTML = "Failed to fetch weather";
+                tempEl.innerHTML = "";
+                rainEl.innerHTML = "";
             });
     }
 
-    function error() {
-        document.getElementById("weather-status").innerHTML = "Unable to get location";
-        document.getElementById("weather-temp").innerHTML = "";
-        document.getElementById("weather-rain").innerHTML = "";
+    function useLocation() {
+        if (!navigator.geolocation) {
+            statusEl.innerHTML = "GPS is not supported in this browser.";
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                fetchWeather(`/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+            },
+            () => {
+                statusEl.innerHTML = "Location permission denied. Try entering a city name instead.";
+                tempEl.innerHTML = "";
+                rainEl.innerHTML = "";
+            }
+        );
     }
+
+    function useCity() {
+        const city = document.getElementById("city-input").value.trim();
+        if (!city) {
+            statusEl.innerHTML = "Please enter a city name.";
+            return;
+        }
+
+        fetchWeather(`/weather?city=${encodeURIComponent(city)}`);
+    }
+
+    document.getElementById("use-location-btn").addEventListener("click", useLocation);
+    document.getElementById("city-btn").addEventListener("click", useCity);
+    document.getElementById("city-input").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            useCity();
+        }
+    });
+
+    useLocation();
 </script>
 <!-- =================================== -->
 

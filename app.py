@@ -5,6 +5,8 @@ import uuid
 import tensorflow as tf
 import requests
 
+API_KEY = "bfd851a6ce85aad45ccc612b9321aecf"
+
 app = Flask(__name__)
 
 model = tf.keras.models.load_model("models/crop_disease_model.keras")
@@ -51,24 +53,35 @@ def uploadimage():
 
 @app.route('/weather')
 def weather():
-    lat = request.args.get("lat")
-    lon = request.args.get("lon")
+    lat = request.args.get("lat", "").strip()
+    lon = request.args.get("lon", "").strip()
+    city = request.args.get("city", "").strip()
 
-    if not lat or not lon:
-        return {"error": True, "message": "Missing latitude or longitude"}, 400
+    if lat and lon:
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+    elif city:
+        geo_url = f"https://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={API_KEY}"
+        geo_resp = requests.get(geo_url, timeout=15)
+        geo_data = geo_resp.json()
 
-    API_KEY = "bfd851a6ce85aad45ccc612b9321aecf"
-    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+        if not geo_data:
+            return {"error": True, "message": "City not found"}, 404
 
-    response = requests.get(url)
+        lat = geo_data[0].get("lat")
+        lon = geo_data[0].get("lon")
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+    else:
+        return {"error": True, "message": "Missing latitude, longitude, or city"}, 400
+
+    response = requests.get(weather_url, timeout=15)
     data = response.json()
 
-    if "main" not in data:
+    if response.status_code != 200 or "main" not in data:
         return {
             "error": True,
             "message": data.get("message", "Weather API failed"),
             "raw": data
-        }, 500
+        }, response.status_code if response.status_code != 200 else 500
 
     return {
         "error": False,
