@@ -51,7 +51,7 @@ The result page displays the predicted disease along with guidance for treatment
    ```bash
    python app.py
    ```
-4. Open the app in your browser at:
+4. Open the app in your browser locally at:
    ```text
    http://127.0.0.1:5000/
    ```
