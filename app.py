@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, redirect, send_from_directory
-import numpy as np
-import pandas as pd
-import maatplotlib as lib
+# import numpy as np
+# import pandas as pd
+# import maatplotlib as lib  (spelling bhi galat jarurat bhi nahi)
 import json
 import uuid
 import tensorflow as tf
-import requests
+# import requests
 
-API_KEY = "bfd851a6ce85aad45ccc612b9321aecf"
+# API_KEY = "bfd851a6ce85a(sensitive)ad45ccc612b9321aecf"
 
 app = Flask(__name__)
 
@@ -53,8 +53,8 @@ def uploadimage():
         return redirect('/')
 
 
-@app.route('/weather')
-def weather():
+# @app.route('/weather')
+# def weather():
     lat = request.args.get("lat", "").strip()
     lon = request.args.get("lon", "").strip()
     city = request.args.get("city", "").strip()
